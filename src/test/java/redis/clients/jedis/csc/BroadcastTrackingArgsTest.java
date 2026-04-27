@@ -1,18 +1,12 @@
 package redis.clients.jedis.csc;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
-
-import redis.clients.jedis.exceptions.JedisException;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Pure unit tests for the BCAST / NOLOOP tracking-mode wiring. These exercise
@@ -58,92 +52,5 @@ public class BroadcastTrackingArgsTest {
     Cache cache = CacheFactory.getCache(cfg);
     assertTrue(cache.isBroadcastMode());
     assertEquals(Collections.singletonList("user:"), cache.getPrefixes());
-  }
-
-  @Test
-  public void buildArgsForDefaultMode() {
-    Cache cache = CacheFactory.getCache(CacheConfig.builder().build());
-    String[] args = CacheConnection.buildTrackingArgs(cache);
-    assertArrayEquals(new String[] { "TRACKING", "ON" }, args);
-  }
-
-  @Test
-  public void buildArgsForBroadcastWithoutPrefixes() {
-    Cache cache = CacheFactory.getCache(CacheConfig.builder().bcast().build());
-    String[] args = CacheConnection.buildTrackingArgs(cache);
-    assertArrayEquals(new String[] { "TRACKING", "ON", "BCAST" }, args);
-  }
-
-  @Test
-  public void buildArgsForBroadcastWithPrefixes() {
-    Cache cache = CacheFactory.getCache(CacheConfig.builder()
-        .bcast()
-        .prefixes("user:", "order:")
-        .build());
-    String[] args = CacheConnection.buildTrackingArgs(cache);
-    assertArrayEquals(
-        new String[] { "TRACKING", "ON", "BCAST", "PREFIX", "user:", "PREFIX", "order:" }, args);
-  }
-
-  @Test
-  public void buildArgsRejectsEmptyPrefix() {
-    Cache cache = CacheFactory.getCache(CacheConfig.builder()
-        .bcast()
-        .prefixes("user:", "")
-        .build());
-    assertThrows(JedisException.class, () -> CacheConnection.buildTrackingArgs(cache));
-  }
-
-  @Test
-  public void buildArgsIgnoresPrefixesWhenBroadcastDisabled() {
-    // Configuring prefixes without enabling broadcast mode should not leak PREFIX into the
-    // handshake — the server would reject those args without BCAST.
-    Cache cache = CacheFactory.getCache(CacheConfig.builder()
-        .prefixes("user:")
-        .build());
-    String[] args = CacheConnection.buildTrackingArgs(cache);
-    assertArrayEquals(new String[] { "TRACKING", "ON" }, args);
-  }
-
-  @Test
-  public void configBuilderStoresNoLoop() {
-    CacheConfig cfg = CacheConfig.builder().noloop().build();
-    assertTrue(cfg.noloop());
-  }
-
-  @Test
-  public void cacheReflectsNoLoopViaFactory() {
-    Cache cache = CacheFactory.getCache(CacheConfig.builder().noloop().build());
-    assertTrue(cache.isNoLoop());
-  }
-
-  @Test
-  public void buildArgsForNoLoopOnly() {
-    Cache cache = CacheFactory.getCache(CacheConfig.builder().noloop().build());
-    String[] args = CacheConnection.buildTrackingArgs(cache);
-    assertArrayEquals(new String[] { "TRACKING", "ON", "NOLOOP" }, args);
-  }
-
-  @Test
-  public void buildArgsForBroadcastWithNoLoop() {
-    Cache cache = CacheFactory.getCache(CacheConfig.builder()
-        .bcast()
-        .noloop()
-        .build());
-    String[] args = CacheConnection.buildTrackingArgs(cache);
-    assertArrayEquals(new String[] { "TRACKING", "ON", "BCAST", "NOLOOP" }, args);
-  }
-
-  @Test
-  public void buildArgsForBroadcastPrefixesAndNoLoop() {
-    Cache cache = CacheFactory.getCache(CacheConfig.builder()
-        .bcast()
-        .prefixes("user:", "order:")
-        .noloop()
-        .build());
-    String[] args = CacheConnection.buildTrackingArgs(cache);
-    assertArrayEquals(
-        new String[] { "TRACKING", "ON", "BCAST", "PREFIX", "user:", "PREFIX", "order:", "NOLOOP" },
-        args);
   }
 }

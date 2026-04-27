@@ -167,7 +167,7 @@ public class CacheConnection extends Connection {
     }
   }
 
-  private String[] buildTrackingArgs(Cache cache) {
+  public String[] buildTrackingArgs(Cache cache) {
     List<String> args = new ArrayList<>();
     args.add("TRACKING");
     args.add("ON");
